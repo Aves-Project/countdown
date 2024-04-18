@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AvesCoin Halving Countdown</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #f2f2f2;
+    margin: 0;
+    padding: 0;
+    animation: fadeIn 1s ease-in-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding-top: 50px;
+  }
+  .card {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+    animation: slideIn 1s ease-in-out;
+  }
+  @keyframes slideIn {
+    from { transform: translateY(-100px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .card-header {
+    font-size: 24px;
+    margin-bottom: 10px;
+    color: #333;
+  }
+  .card-content {
+    font-size: 18px;
+    margin-bottom: 20px;
+    color: #666;
+  }
+  .icon {
+    font-size: 48px;
+    color: #3498db;
+    margin-bottom: 10px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <div class="card-header">AvesCoin Halving Countdown</div>
+    <div class="card-content">
+      <div id="countdown"></div>
+      <div id="block-info"></div>
+      <div id="halving-info"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">Average block time</div>
+    <div class="card-content">
+      <div id="avg-blocks-per-sec"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// URL of the RPC endpoint
+var rpcUrl = "https://rpc.avescoin.io";
+
+// Block time in seconds
+
+// Block number of the halving event
+var halvingBlock = 3350000;
+
+// Function to fetch the current block number
+async function getCurrentBlockNumber() {
+  try {
+    var response = await fetch(rpcUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        method: "eth_blockNumber", 
+        params: [],
+        id: 1
+      })
+    });
+
+    var data = await response.json();
+    return parseInt(data.result, 16); // Convert hexadecimal to decimal
+  } catch (error) {
+    console.error("Error fetching current block number:", error);
+    return null;
+  }
+}
+
+// Function to update the countdown, block info, and halving info
+async function updateCountdown() {
+  var currentBlock = await getCurrentBlockNumber();
+  var blockTimeSeconds = await getBlockTime();
+  if (currentBlock !== null) {
+    var blocksRemaining = halvingBlock - currentBlock;
+    var timeRemainingSeconds = blocksRemaining * blockTimeSeconds;
+
+    var hours = Math.floor(timeRemainingSeconds / 3600);
+    var minutes = Math.floor((timeRemainingSeconds % 3600) / 60);
+    var seconds = Math.floor(timeRemainingSeconds % 60);
+
+    document.getElementById("countdown").innerHTML = "<i class='fas fa-clock icon'></i> Halving in: " + hours + "h " + minutes + "m " + seconds + "s";
+    document.getElementById("block-info").innerHTML = "<i class='fas fa-cubes icon'></i> Current block: " + currentBlock + " | Blocks left: " + blocksRemaining;
+    document.getElementById("halving-info").innerHTML = "<i class='fas fa-calendar-day icon'></i> Halving at block: " + halvingBlock;
+  }
+}
+
+// Function to calculate average blocks per second from the last 25 blocks
+async function calculateAvgBlocksPerSec() {
+  try {
+    var response = await fetch('https://avescan.io/api/v2/stats');
+    var data = await response.json();
+
+    var averageBlockTime = data.average_block_time / 1000; // Convert milliseconds to seconds
+    var avgBlocksPerSec = averageBlockTime;
+
+    document.getElementById("avg-blocks-per-sec").innerHTML = "<i class='fas fa-chart-line icon'></i> " + avgBlocksPerSec.toFixed(2) + "s";
+  } catch (error) {
+    console.error("Error calculating average blocks per second:", error);
+    document.getElementById("avg-blocks-per-sec").innerHTML = "<i class='fas fa-exclamation-triangle icon'></i> Error calculating average blocks per second";
+  }
+}
+
+async function getBlockTime() {
+  try {
+    var response = await fetch('https://avescan.io/api/v2/stats');
+    var data = await response.json();
+
+    var averageBlockTime = data.average_block_time / 1000; // Convert milliseconds to seconds
+    return averageBlockTime
+  } catch (error) {
+    console.error("Error calculating average blocks per second:", error);
+  }
+}
+
+
+// Update the countdown, block info, and halving info initially
+updateCountdown();
+calculateAvgBlocksPerSec();
+
+// Update the countdown, block info, and halving info continuously
+setInterval(updateCountdown, 1000);
+
+// Update the average blocks per second continuously
+setInterval(calculateAvgBlocksPerSec, 5000); // Update every 5 seconds
+</script>
+</body>
+</html>
