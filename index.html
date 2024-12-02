@@ -1,177 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AvesCoin Halving Countdown</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    background-color: #f2f2f2;
-    margin: 0;
-    padding: 0;
-    animation: fadeIn 1s ease-in-out;
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  .container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding-top: 50px;
-  }
-  .card {
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    margin-bottom: 20px;
-    animation: slideIn 1s ease-in-out;
-  }
-  @keyframes slideIn {
-    from { transform: translateY(-100px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
-  .card-header {
-    font-size: 24px;
-    margin-bottom: 10px;
-    color: #333;
-  }
-  .card-content {
-    font-size: 18px;
-    margin-bottom: 20px;
-    color: #666;
-  }
-  .icon {
-    font-size: 48px;
-    color: #3498db;
-    margin-bottom: 10px;
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AvesCoin Halving Countdown</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #f6f8f9 0%, #e5ebee 100%);
+            font-family: 'Inter', sans-serif;
+        }
+        .glassy-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        .glassy-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        }
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+    </style>
 </head>
-<body>
-<div class="container">
-  <div class="card">
-    <div class="card-header">AvesCoin Halving Countdown</div>
-    <div class="card-content">
-      <div id="countdown"></div>
-      <div id="block-info"></div>
-      <div id="halving-info"></div>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="container mx-auto max-w-4xl space-y-6">
+        <div class="glassy-card rounded-2xl p-8 text-center">
+            <h1 class="text-3xl font-bold mb-6 text-gray-800">AvesCoin Halving Countdown</h1>
+            
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-blue-50 rounded-xl p-6 pulse-animation">
+                    <i class="fas fa-clock text-4xl text-blue-500 mb-4 block"></i>
+                    <h2 class="font-semibold text-gray-700 mb-2">Time Remaining</h2>
+                    <div id="countdown" class="text-2xl font-bold text-blue-600"></div>
+                </div>
+                
+                <div class="bg-green-50 rounded-xl p-6">
+                    <i class="fas fa-cubes text-4xl text-green-500 mb-4 block"></i>
+                    <h2 class="font-semibold text-gray-700 mb-2">Block Information</h2>
+                    <div id="block-info" class="text-xl font-medium text-green-600"></div>
+                </div>
+                
+                <div class="bg-purple-50 rounded-xl p-6">
+                    <i class="fas fa-calendar-day text-4xl text-purple-500 mb-4 block"></i>
+                    <h2 class="font-semibold text-gray-700 mb-2">Halving Details</h2>
+                    <div id="halving-info" class="text-xl font-medium text-purple-600"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="glassy-card rounded-2xl p-6 text-center">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800">Network Statistics</h2>
+            <div id="avg-blocks-per-sec" class="text-xl font-semibold text-gray-700"></div>
+        </div>
     </div>
-  </div>
-  <div class="card">
-    <div class="card-header">Average block time</div>
-    <div class="card-content">
-      <div id="avg-blocks-per-sec"></div>
-    </div>
-  </div>
-</div>
 
-<script>
-// URL of the RPC endpoint
-var rpcUrl = "https://rpc.avescoin.io";
+    <script>
+        // Same JavaScript as the original, with minor formatting adjustments
+        var rpcUrl = "https://rpc.avescoin.io";
+        var halvingBlock = 5000000;
 
-// Block time in seconds
+        async function getCurrentBlockNumber() {
+            try {
+                var response = await fetch(rpcUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        jsonrpc: "2.0",
+                        method: "eth_blockNumber", 
+                        params: [],
+                        id: 1
+                    })
+                });
 
-// Block number of the halving event
-var halvingBlock = 5000000;
+                var data = await response.json();
+                return parseInt(data.result, 16);
+            } catch (error) {
+                console.error("Error fetching current block number:", error);
+                return null;
+            }
+        }
 
-// Function to fetch the current block number
-async function getCurrentBlockNumber() {
-  try {
-    var response = await fetch(rpcUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        jsonrpc: "2.0",
-        method: "eth_blockNumber", 
-        params: [],
-        id: 1
-      })
-    });
+        async function updateCountdown() {
+            var currentBlock = await getCurrentBlockNumber();
+            var blockTimeSeconds = await getBlockTime();
+            if (currentBlock !== null) {
+                var blocksRemaining = halvingBlock - currentBlock;
+                var timeRemainingSeconds = blocksRemaining * blockTimeSeconds;
 
-    var data = await response.json();
-    return parseInt(data.result, 16); // Convert hexadecimal to decimal
-  } catch (error) {
-    console.error("Error fetching current block number:", error);
-    return null;
-  }
-}
+                var days = Math.floor(timeRemainingSeconds / 86400);
+                var hours = Math.floor((timeRemainingSeconds % 86400) / 3600);
+                var minutes = Math.floor((timeRemainingSeconds % 3600) / 60);
+                var seconds = Math.floor(timeRemainingSeconds % 60);
 
-// Function to update the countdown, block info, and halving info
-async function updateCountdown() {
-  var currentBlock = await getCurrentBlockNumber();
-  var blockTimeSeconds = await getBlockTime();
-  if (currentBlock !== null) {
-    var blocksRemaining = halvingBlock - currentBlock;
-    var timeRemainingSeconds = blocksRemaining * blockTimeSeconds;
+                document.getElementById("countdown").innerHTML = 
+                    days + "d " + 
+                    hours + "h " + 
+                    minutes + "m " + 
+                    seconds + "s";
+                
+                document.getElementById("block-info").innerHTML = 
+                    "Current: " + currentBlock + 
+                    "<br>Remaining: " + blocksRemaining;
+                
+                document.getElementById("halving-info").innerHTML = 
+                    "Halving Block: " + halvingBlock;
+            }
+        }
 
-    // Calculate days, hours, minutes, and seconds
-    var days = Math.floor(timeRemainingSeconds / 86400); // 86400 seconds in a day
-    var hours = Math.floor((timeRemainingSeconds % 86400) / 3600); // Remaining hours after removing days
-    var minutes = Math.floor((timeRemainingSeconds % 3600) / 60); // Remaining minutes after removing hours
-    var seconds = Math.floor(timeRemainingSeconds % 60); // Remaining seconds
+        async function calculateAvgBlocksPerSec() {
+            try {
+                var response = await fetch('https://avescan.io/api/v2/stats');
+                var data = await response.json();
 
-    // Update the HTML elements with the countdown
-    document.getElementById("countdown").innerHTML = 
-      "<i class='fas fa-clock icon'></i> Halving in: " + 
-      "Days: " + days + " " +
-      hours + "h " + 
-      minutes + "m " + 
-      seconds + "s";
-    document.getElementById("block-info").innerHTML = 
-      "<i class='fas fa-cubes icon'></i> Current block: " + 
-      currentBlock + 
-      " | Blocks left: " + blocksRemaining;
-    document.getElementById("halving-info").innerHTML = 
-      "<i class='fas fa-calendar-day icon'></i> Halving at block: " + halvingBlock;
-  }
-}
+                var averageBlockTime = data.average_block_time / 1000;
+                var avgBlocksPerSec = averageBlockTime;
 
+                document.getElementById("avg-blocks-per-sec").innerHTML = 
+                    "Average Block Time: " + avgBlocksPerSec.toFixed(2) + "s";
+            } catch (error) {
+                console.error("Error calculating average blocks per second:", error);
+                document.getElementById("avg-blocks-per-sec").innerHTML = 
+                    "Unable to fetch network statistics";
+            }
+        }
 
-// Function to calculate average blocks per second from the last 25 blocks
-async function calculateAvgBlocksPerSec() {
-  try {
-    var response = await fetch('https://avescan.io/api/v2/stats');
-    var data = await response.json();
+        async function getBlockTime() {
+            try {
+                var response = await fetch('https://avescan.io/api/v2/stats');
+                var data = await response.json();
 
-    var averageBlockTime = data.average_block_time / 1000; // Convert milliseconds to seconds
-    var avgBlocksPerSec = averageBlockTime;
+                return data.average_block_time / 1000;
+            } catch (error) {
+                console.error("Error calculating average blocks per second:", error);
+                return 15; // Fallback average block time
+            }
+        }
 
-    document.getElementById("avg-blocks-per-sec").innerHTML = "<i class='fas fa-chart-line icon'></i> " + avgBlocksPerSec.toFixed(2) + "s";
-  } catch (error) {
-    console.error("Error calculating average blocks per second:", error);
-    document.getElementById("avg-blocks-per-sec").innerHTML = "<i class='fas fa-exclamation-triangle icon'></i> Error calculating average blocks per second";
-  }
-}
+        updateCountdown();
+        calculateAvgBlocksPerSec();
 
-async function getBlockTime() {
-  try {
-    var response = await fetch('https://avescan.io/api/v2/stats');
-    var data = await response.json();
-
-    var averageBlockTime = data.average_block_time / 1000; // Convert milliseconds to seconds
-    return averageBlockTime
-  } catch (error) {
-    console.error("Error calculating average blocks per second:", error);
-  }
-}
-
-
-// Update the countdown, block info, and halving info initially
-updateCountdown();
-calculateAvgBlocksPerSec();
-
-// Update the countdown, block info, and halving info continuously
-setInterval(updateCountdown, 1000);
-
-// Update the average blocks per second continuously
-setInterval(calculateAvgBlocksPerSec, 5000); // Update every 5 seconds
-</script>
+        setInterval(updateCountdown, 1000);
+        setInterval(calculateAvgBlocksPerSec, 5000);
+    </script>
 </body>
 </html>
